@@ -14,7 +14,7 @@ import com.google.android.exoplayer2.trackselection.TrackSelector
 import com.google.android.exoplayer2.ui.DefaultTrackNameProvider
 import com.naseeb.exoplayer.IPlayer
 import com.naseeb.exoplayer.PlayerImpl
-import kotlinx.android.synthetic.main.activity_main.*
+import kotlinx.android.synthetic.main.activity_twitch_activty.*
 import kotlinx.android.synthetic.main.ui_exoplayer.*
 import kotlinx.coroutines.CoroutineScope
 import kotlinx.coroutines.Dispatchers
@@ -48,23 +48,28 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
 
     private fun customTrackSelection(trackSelector: DefaultTrackSelector, popupMenu: PopupMenu) {
         val mappedTrackInfo = trackSelector.currentMappedTrackInfo
-        val trackGroupArray = mappedTrackInfo!!.getTrackGroups(0)
-        for (groupIndex in 0 until trackGroupArray.length) {
-            for (trackIndex in 0 until trackGroupArray.get(groupIndex).length) {
-                val trackName = DefaultTrackNameProvider(resources).getTrackName(
-                    trackGroupArray.get(groupIndex).getFormat(trackIndex)
-                )
-                val rendererIndex = 0
-                val isTrackSupported = mappedTrackInfo.getTrackSupport(
-                    rendererIndex,
-                    groupIndex,
-                    trackIndex
-                ) == RendererCapabilities.FORMAT_HANDLED
-                popupMenu.menu.add(trackName)
-                popupMenu.show()
-
+        if (mappedTrackInfo != null) {
+            val trackGroupArray = mappedTrackInfo!!.getTrackGroups(0)
+            for (groupIndex in 0 until trackGroupArray.length) {
+                for (trackIndex in 0 until trackGroupArray.get(groupIndex).length) {
+                    val trackName = DefaultTrackNameProvider(resources).getTrackName(
+                        trackGroupArray.get(groupIndex).getFormat(trackIndex)
+                    )
+                    val rendererIndex = 0
+                    val isTrackSupported = mappedTrackInfo.getTrackSupport(
+                        rendererIndex,
+                        groupIndex,
+                        trackIndex
+                    ) == RendererCapabilities.FORMAT_HANDLED
+                    popupMenu.menu.add(trackName)
+                    popupMenu.show()
+                }
             }
+        } else {
+            Toast.makeText(this, "Unexpected error occurred!", Toast.LENGTH_SHORT).show()
+            return
         }
+
         popupMenu.setOnMenuItemClickListener {
             val maxWidth = it.title
             val getTitle = maxWidth.split(",").toTypedArray()
@@ -78,6 +83,7 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
             true
         }
     }
+
 
     private suspend fun getTwitchToken() {
         try {
@@ -126,12 +132,12 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
         Log.d("TAG", "onMediaDurationFetched: $videoDuration")
     }
 
-    /* private fun getPlayList(response: ResponseBody) {
-         val b = M3UParser().readPlaylist(response.string())
-         val qualityList = readPlaylist(b)
-     }*/
+/* private fun getPlayList(response: ResponseBody) {
+     val b = M3UParser().readPlaylist(response.string())
+     val qualityList = readPlaylist(b)
+ }*/
 
-    /*//    private fun parsePlayList(hlsMediaSource: HlsMediaSource) {
+/*//    private fun parsePlayList(hlsMediaSource: HlsMediaSource) {
 //        trackSelector = DefaultTrackSelector(this)
 //
 //        trackSelector.setParameters(
@@ -171,47 +177,47 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
 //        mVideoPlayer.playWhenReady = true
 //    }*/
 
-    /* private fun readPlaylist(lineIterator: Iterator<String>): ArrayList<Quality> {
-         // but some examples allow empty lines before the tag.
-         var extM3uFound = false
-         while (lineIterator.hasNext() && !extM3uFound) {
-             val line = lineIterator.next()
-             if (EXTM3U == line) {
-                 extM3uFound = true
-             } else if (!line.isEmpty()) {
-                 break // invalid line  found
-             }
-             // else: line is empty
+/* private fun readPlaylist(lineIterator: Iterator<String>): ArrayList<Quality> {
+     // but some examples allow empty lines before the tag.
+     var extM3uFound = false
+     while (lineIterator.hasNext() && !extM3uFound) {
+         val line = lineIterator.next()
+         if (EXTM3U == line) {
+             extM3uFound = true
+         } else if (!line.isEmpty()) {
+             break // invalid line  found
          }
-         if (!extM3uFound) {
-             Toast.makeText(this, "Invalid playlist. Expected #EXTM3U.", Toast.LENGTH_SHORT).show()
-         }
-         while (lineIterator.hasNext()) {
-             val line = lineIterator.next()
-             if (line.startsWith("#EXT")) {
-                 val colonPosition = line.indexOf(':')
-                 val prefix =
-                     if (colonPosition > 0) line.substring(1, colonPosition) else line.substring(1)
-                 val attributes = if (colonPosition > 0) line.substring(colonPosition + 1) else ""
-                 if (attributes.contains("BANDWIDTH")) {
-                     mQualityName.add(attributes)
-                 }
-             } else if (!(line.startsWith("#") || line.isEmpty())) {
-                 mList.add(line)
-             }
-         }
-
-         val qualityList = ArrayList<Quality>()
-         qualityList.clear()
-
-         for (j in 0 until (mList.size)) {
-             Log.d("TAG", "readPlaylist: ${mQualityName[j].split(",")[1] + " : " + mList[j]}")
-             val quality = Quality(mQualityName[j].split(",")[1], mList[j])
-             qualityList.add(quality)
-         }
-         return qualityList
+         // else: line is empty
      }
- */
+     if (!extM3uFound) {
+         Toast.makeText(this, "Invalid playlist. Expected #EXTM3U.", Toast.LENGTH_SHORT).show()
+     }
+     while (lineIterator.hasNext()) {
+         val line = lineIterator.next()
+         if (line.startsWith("#EXT")) {
+             val colonPosition = line.indexOf(':')
+             val prefix =
+                 if (colonPosition > 0) line.substring(1, colonPosition) else line.substring(1)
+             val attributes = if (colonPosition > 0) line.substring(colonPosition + 1) else ""
+             if (attributes.contains("BANDWIDTH")) {
+                 mQualityName.add(attributes)
+             }
+         } else if (!(line.startsWith("#") || line.isEmpty())) {
+             mList.add(line)
+         }
+     }
+
+     val qualityList = ArrayList<Quality>()
+     qualityList.clear()
+
+     for (j in 0 until (mList.size)) {
+         Log.d("TAG", "readPlaylist: ${mQualityName[j].split(",")[1] + " : " + mList[j]}")
+         val quality = Quality(mQualityName[j].split(",")[1], mList[j])
+         qualityList.add(quality)
+     }
+     return qualityList
+ }
+*/
 
 }
 
