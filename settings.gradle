@@ -1,0 +1,4 @@
+include ':Exoplayer'
+include ':Log'
+include ':app'
+rootProject.name = "SampleHlsPlayer"
