@@ -34,7 +34,6 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
     //region variables
     private lateinit var trackSelector: TrackSelector
     private var count = 0
-    var fullscreen = false
     private val TAG = TwitchActivity::class.simpleName
     private var playerInstance: PlayerImpl? = null
     //endregion
@@ -56,33 +55,42 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
         }
 
         exo_fullscreen.setOnClickListener {
-            requestedOrientation = if (requestedOrientation == ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE) {
-                ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
-            } else {
-                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+            requestedOrientation = when (requestedOrientation) {
+                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE -> {
+                    ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
+                }
+                else -> {
+                    ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
+                }
             }
-            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
-                val controller = window.insetsController
-                controller?.hide(WindowInsets.Type.statusBars())
-                val params = player_view.layoutParams
-                params.width = ViewGroup.LayoutParams.MATCH_PARENT
-                params.height = ViewGroup.LayoutParams.MATCH_PARENT
-                player_view.layoutParams = params
-            } else {
-                Handler(Looper.myLooper()!!).postDelayed({
-                    window.setFlags(WindowManager.LayoutParams.FLAG_FULLSCREEN,
-                        WindowManager.LayoutParams.FLAG_FULLSCREEN)
-                    window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
-                            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
-                            or View.SYSTEM_UI_FLAG_IMMERSIVE
-                            or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
-                            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
-                            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION)
-                    val params = player_view.layoutParams
-                    params.width = ViewGroup.LayoutParams.MATCH_PARENT
-                    params.height = ViewGroup.LayoutParams.MATCH_PARENT
-                    player_view.layoutParams = params
-                }, 1000)
+            when (requestedOrientation) {
+                ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE -> {
+                    if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                        val controller = window.insetsController
+                        controller?.hide(WindowInsets.Type.statusBars())
+                        val params = player_view.layoutParams
+                        params.width = ViewGroup.LayoutParams.MATCH_PARENT
+                        params.height = ViewGroup.LayoutParams.MATCH_PARENT
+                        player_view.layoutParams = params
+                    } else {
+                        Handler(Looper.myLooper()!!).postDelayed({
+                            window.setFlags(
+                                WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                                WindowManager.LayoutParams.FLAG_FULLSCREEN
+                            )
+                            window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
+                                    or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                                    or View.SYSTEM_UI_FLAG_IMMERSIVE
+                                    or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                                    or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                                    or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION)
+                            val params = player_view.layoutParams
+                            params.width = ViewGroup.LayoutParams.MATCH_PARENT
+                            params.height = ViewGroup.LayoutParams.MATCH_PARENT
+                            player_view.layoutParams = params
+                        }, 1000)
+                    }
+                }
             }
         }
     }
@@ -126,6 +134,31 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
                 val builder = trackSelector.buildUponParameters().clearVideoSizeConstraints()
                 trackSelector.setParameters(builder)
             }
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.R) {
+                val controller = window.insetsController
+                controller?.hide(WindowInsets.Type.statusBars())
+                val params = player_view.layoutParams
+                params.width = ViewGroup.LayoutParams.MATCH_PARENT
+                params.height = ViewGroup.LayoutParams.WRAP_CONTENT
+                player_view.layoutParams = params
+            } else {
+                Handler(Looper.myLooper()!!).postDelayed({
+                    window.setFlags(
+                        WindowManager.LayoutParams.FLAG_FULLSCREEN,
+                        WindowManager.LayoutParams.FLAG_FULLSCREEN
+                    )
+                    window.decorView.systemUiVisibility = (View.SYSTEM_UI_FLAG_FULLSCREEN
+                            or View.SYSTEM_UI_FLAG_HIDE_NAVIGATION
+                            or View.SYSTEM_UI_FLAG_IMMERSIVE
+                            or View.SYSTEM_UI_FLAG_LAYOUT_STABLE
+                            or View.SYSTEM_UI_FLAG_LAYOUT_FULLSCREEN
+                            or View.SYSTEM_UI_FLAG_LAYOUT_HIDE_NAVIGATION)
+                    val params = player_view.layoutParams
+                    params.width = ViewGroup.LayoutParams.MATCH_PARENT
+                    params.height = ViewGroup.LayoutParams.WRAP_CONTENT
+                    player_view.layoutParams = params
+                }, 1000)
+            }
             true
         }
     }
@@ -166,7 +199,8 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
                 context = applicationContext,
                 uri = Uri.parse(url),
                 playerView = player_view,
-                playerCallback = this
+                playerCallback = this,
+                progressBar = pg
             )
             playerInstance!!.play()
 
@@ -200,9 +234,9 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
     }
 
     /* private fun getPlayList(response: ResponseBody) {
-     val b = M3UParser().readPlaylist(response.string())
-     val qualityList = readPlaylist(b)
- }*/
+ val b = M3UParser().readPlaylist(response.string())
+ val qualityList = readPlaylist(b)
+}*/
 
     /*//    private fun parsePlayList(hlsMediaSource: HlsMediaSource) {
 //        trackSelector = DefaultTrackSelector(this)
@@ -245,45 +279,45 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
 //    }*/
 
     /* private fun readPlaylist(lineIterator: Iterator<String>): ArrayList<Quality> {
-     // but some examples allow empty lines before the tag.
-     var extM3uFound = false
-     while (lineIterator.hasNext() && !extM3uFound) {
-         val line = lineIterator.next()
-         if (EXTM3U == line) {
-             extM3uFound = true
-         } else if (!line.isEmpty()) {
-             break // invalid line  found
-         }
-         // else: line is empty
+ // but some examples allow empty lines before the tag.
+ var extM3uFound = false
+ while (lineIterator.hasNext() && !extM3uFound) {
+     val line = lineIterator.next()
+     if (EXTM3U == line) {
+         extM3uFound = true
+     } else if (!line.isEmpty()) {
+         break // invalid line  found
      }
-     if (!extM3uFound) {
-         Toast.makeText(this, "Invalid playlist. Expected #EXTM3U.", Toast.LENGTH_SHORT).show()
-     }
-     while (lineIterator.hasNext()) {
-         val line = lineIterator.next()
-         if (line.startsWith("#EXT")) {
-             val colonPosition = line.indexOf(':')
-             val prefix =
-                 if (colonPosition > 0) line.substring(1, colonPosition) else line.substring(1)
-             val attributes = if (colonPosition > 0) line.substring(colonPosition + 1) else ""
-             if (attributes.contains("BANDWIDTH")) {
-                 mQualityName.add(attributes)
-             }
-         } else if (!(line.startsWith("#") || line.isEmpty())) {
-             mList.add(line)
-         }
-     }
-
-     val qualityList = ArrayList<Quality>()
-     qualityList.clear()
-
-     for (j in 0 until (mList.size)) {
-         Log.d("TAG", "readPlaylist: ${mQualityName[j].split(",")[1] + " : " + mList[j]}")
-         val quality = Quality(mQualityName[j].split(",")[1], mList[j])
-         qualityList.add(quality)
-     }
-     return qualityList
+     // else: line is empty
  }
+ if (!extM3uFound) {
+     Toast.makeText(this, "Invalid playlist. Expected #EXTM3U.", Toast.LENGTH_SHORT).show()
+ }
+ while (lineIterator.hasNext()) {
+     val line = lineIterator.next()
+     if (line.startsWith("#EXT")) {
+         val colonPosition = line.indexOf(':')
+         val prefix =
+             if (colonPosition > 0) line.substring(1, colonPosition) else line.substring(1)
+         val attributes = if (colonPosition > 0) line.substring(colonPosition + 1) else ""
+         if (attributes.contains("BANDWIDTH")) {
+             mQualityName.add(attributes)
+         }
+     } else if (!(line.startsWith("#") || line.isEmpty())) {
+         mList.add(line)
+     }
+ }
+
+ val qualityList = ArrayList<Quality>()
+ qualityList.clear()
+
+ for (j in 0 until (mList.size)) {
+     Log.d("TAG", "readPlaylist: ${mQualityName[j].split(",")[1] + " : " + mList[j]}")
+     val quality = Quality(mQualityName[j].split(",")[1], mList[j])
+     qualityList.add(quality)
+ }
+ return qualityList
+}
 */
 
 }

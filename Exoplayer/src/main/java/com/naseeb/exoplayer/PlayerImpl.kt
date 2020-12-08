@@ -3,6 +3,8 @@ package com.naseeb.exoplayer
 import android.content.Context
 import android.net.Uri
 import android.os.Handler
+import android.view.View
+import android.widget.ProgressBar
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.analytics.AnalyticsListener
 import com.google.android.exoplayer2.source.MediaSource
@@ -13,7 +15,6 @@ import com.google.android.exoplayer2.source.dash.DefaultDashChunkSource
 import com.google.android.exoplayer2.source.hls.HlsMediaSource
 import com.google.android.exoplayer2.source.smoothstreaming.DefaultSsChunkSource
 import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource
-import com.google.android.exoplayer2.trackselection.DefaultTrackSelector
 import com.google.android.exoplayer2.trackselection.TrackSelector
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.DataSource
@@ -27,7 +28,8 @@ class PlayerImpl(
     private val context: Context,
     private val uri: Uri,
     private val playerView: PlayerView,
-    private val playerCallback: IPlayer.PlayerCallback?
+    private val playerCallback: IPlayer.PlayerCallback?,
+    private val progressBar: ProgressBar
 ) : IPlayer,
     Player.EventListener, AnalyticsListener, MediaSourceEventListener {
 
@@ -185,6 +187,7 @@ class PlayerImpl(
         )
         when (playbackState) {
             Player.STATE_READY -> {
+                progressBar.visibility = View.GONE
                 LogUtil.debugLog(
                     TAG, "PlayerEventListener onPlayerStateChanged Player.STATE_READY " +
                             "mIsStartedPlayingFirstTime : $mIsStartedPlayingFirstTime"
@@ -208,6 +211,7 @@ class PlayerImpl(
                 playerCallback?.onPlayEnded()
             }
             Player.STATE_BUFFERING -> {
+                progressBar.visibility = View.VISIBLE
                 playerCallback?.onBufferingStarted()
             }
             Player.STATE_IDLE -> {
