@@ -48,6 +48,7 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
 
     private fun customTrackSelection(trackSelector: DefaultTrackSelector, popupMenu: PopupMenu) {
         val mappedTrackInfo = trackSelector.currentMappedTrackInfo
+        popupMenu.menu.add("auto")
         if (mappedTrackInfo != null) {
             val trackGroupArray = mappedTrackInfo!!.getTrackGroups(0)
             for (groupIndex in 0 until trackGroupArray.length) {
@@ -72,14 +73,19 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
 
         popupMenu.setOnMenuItemClickListener {
             val maxWidth = it.title
-            val getTitle = maxWidth.split(",").toTypedArray()
-            val getHeightWidth = getTitle[0].split("×").toTypedArray()
-            val builder = trackSelector.buildUponParameters()
-                .setMaxVideoSize(
-                    getHeightWidth[0].trim().toInt(),
-                    getHeightWidth[1].trim().toInt()
-                )
-            trackSelector.setParameters(builder)
+            if (maxWidth != "auto") {
+                val getTitle = maxWidth.split(",").toTypedArray()
+                val getHeightWidth = getTitle[0].split("×").toTypedArray()
+                val builder = trackSelector.buildUponParameters()
+                    .setMaxVideoSize(
+                        getHeightWidth[0].trim().toInt(),
+                        getHeightWidth[1].trim().toInt()
+                    )
+                trackSelector.setParameters(builder)
+            } else {
+                val builder = trackSelector.buildUponParameters().clearVideoSizeConstraints()
+                trackSelector.setParameters(builder)
+            }
             true
         }
     }
@@ -89,7 +95,7 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
         try {
             val response = RetrofitClient.instance.getToken(
                 "kimne78kx3ncx6brgo4mv6wki5h1ko",
-                "karlaplan"
+                "tenz"
             )
             val jsonObject = JSONObject(response.string())
             CoroutineScope(Dispatchers.Main).launch {
@@ -108,7 +114,7 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
     private fun getTwitchStreams(jsonObject: JSONObject?) {
         if (jsonObject != null) {
             val url =
-                "http://usher.twitch.tv/api/channel/hls/karlaplan.m3u8?player=twitchweb&token=${
+                "http://usher.twitch.tv/api/channel/hls/tenz.m3u8?player=twitchweb&token=${
                     jsonObject.getString("token")
                 }&sig=${jsonObject.getString("sig")}&allow_audio_only=true&allow_source=true&type=any&p=39114"
 
@@ -132,12 +138,12 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
         Log.d("TAG", "onMediaDurationFetched: $videoDuration")
     }
 
-/* private fun getPlayList(response: ResponseBody) {
+    /* private fun getPlayList(response: ResponseBody) {
      val b = M3UParser().readPlaylist(response.string())
      val qualityList = readPlaylist(b)
  }*/
 
-/*//    private fun parsePlayList(hlsMediaSource: HlsMediaSource) {
+    /*//    private fun parsePlayList(hlsMediaSource: HlsMediaSource) {
 //        trackSelector = DefaultTrackSelector(this)
 //
 //        trackSelector.setParameters(
@@ -177,7 +183,7 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
 //        mVideoPlayer.playWhenReady = true
 //    }*/
 
-/* private fun readPlaylist(lineIterator: Iterator<String>): ArrayList<Quality> {
+    /* private fun readPlaylist(lineIterator: Iterator<String>): ArrayList<Quality> {
      // but some examples allow empty lines before the tag.
      var extM3uFound = false
      while (lineIterator.hasNext() && !extM3uFound) {
