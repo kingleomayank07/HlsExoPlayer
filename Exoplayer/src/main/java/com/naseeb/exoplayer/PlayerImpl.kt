@@ -36,7 +36,6 @@ class PlayerImpl(
     private var mToken: Int? = null
     private var mMediaSource: MediaSource? = null
     private var mSimpleCache: SimpleCache? = null
-    private lateinit var trackSelector: DefaultTrackSelector
     private var mIsStartedPlayingFirstTime: Boolean = true
 
     override fun pause() {
@@ -130,6 +129,7 @@ class PlayerImpl(
                 LogUtil.debugLog(TAG, "buildMediaSource TYPE_HLS")
                 /*HlsMediaSource.Factory(buildDataSourceFactory()).createMediaSource(uri)*/
                 HlsMediaSource.Factory(buildDataSourceFactory())
+                    .setAllowChunklessPreparation(true)
                     .createMediaSource(
                         MediaItem.Builder()
                             .setUri(uri)
@@ -253,5 +253,11 @@ class PlayerImpl(
         }
 
         LogUtil.errorLog(TAG, "Exiting onPlayerError() error: ${error.message}")
+    }
+
+    fun stop() {
+        mPlayer!!.playWhenReady = false
+        mPlayer!!.stop()
+        mPlayer!!.release()
     }
 }

@@ -12,8 +12,10 @@
         android:supportsRtl="true"
         android:theme="@style/Theme.SampleHlsPlayer"
         android:usesCleartextTraffic="true">
-<!--        <activity android:name=".TwitchActivty" />-->
-        <activity android:name=".ui.TwitchActivity">
+        <!--        <activity android:name=".TwitchActivty" />-->
+        <activity
+            android:name=".ui.TwitchActivity"
+            android:configChanges="orientation|screenSize|layoutDirection">
             <intent-filter>
                 <action android:name="android.intent.action.MAIN" />
 

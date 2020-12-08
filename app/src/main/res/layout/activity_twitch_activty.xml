@@ -7,8 +7,28 @@
     android:background="#E6E2E2"
     android:orientation="vertical">
 
+    <androidx.cardview.widget.CardView
+        android:layout_width="80dp"
+        android:layout_height="30dp"
+        android:layout_margin="16dp"
+        app:cardBackgroundColor="#A4CC0000"
+        app:cardCornerRadius="8dp"
+        app:layout_constraintStart_toStartOf="parent"
+        app:layout_constraintTop_toTopOf="parent">
+
+        <TextView
+            android:layout_width="match_parent"
+            android:layout_height="match_parent"
+            android:gravity="center_horizontal|center_vertical"
+            android:text="LIVE"
+            android:textSize="16sp"
+            android:textColor="#FFF" />
+
+    </androidx.cardview.widget.CardView>
+
+
     <com.google.android.exoplayer2.ui.PlayerView
-        android:id="@+id/media_container"
+        android:id="@+id/player_view"
         android:layout_width="match_parent"
         android:layout_height="350dp"
         android:background="#000"
