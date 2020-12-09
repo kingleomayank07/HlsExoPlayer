@@ -3,8 +3,7 @@ package com.naseeb.exoplayer
 import android.content.Context
 import android.net.Uri
 import android.os.Handler
-import android.view.View
-import android.widget.ProgressBar
+import android.util.Log
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.analytics.AnalyticsListener
 import com.google.android.exoplayer2.source.MediaSource
@@ -28,8 +27,7 @@ class PlayerImpl(
     private val context: Context,
     private val uri: Uri,
     private val playerView: PlayerView,
-    private val playerCallback: IPlayer.PlayerCallback?,
-    private val progressBar: ProgressBar
+    private val playerCallback: IPlayer.PlayerCallback?
 ) : IPlayer,
     Player.EventListener, AnalyticsListener, MediaSourceEventListener {
 
@@ -187,7 +185,8 @@ class PlayerImpl(
         )
         when (playbackState) {
             Player.STATE_READY -> {
-                progressBar.visibility = View.GONE
+                playerCallback?.onBufferingEnded()
+                Log.d(TAG, "onBufferingStarted: ${mPlayer?.totalBufferedDuration}")
                 LogUtil.debugLog(
                     TAG, "PlayerEventListener onPlayerStateChanged Player.STATE_READY " +
                             "mIsStartedPlayingFirstTime : $mIsStartedPlayingFirstTime"
@@ -211,7 +210,6 @@ class PlayerImpl(
                 playerCallback?.onPlayEnded()
             }
             Player.STATE_BUFFERING -> {
-                progressBar.visibility = View.VISIBLE
                 playerCallback?.onBufferingStarted()
             }
             Player.STATE_IDLE -> {
@@ -220,22 +218,22 @@ class PlayerImpl(
         }
     }
 
+
     override fun onPlayerError(error: ExoPlaybackException) {
         // super.onPlayerError(error)
         LogUtil.errorLog(TAG, "Entering onPlayerError() error: ${error.message}")
+
         when (error.type) {
             ExoPlaybackException.TYPE_SOURCE -> {
+                mPlayer?.prepare()
+                mPlayer?.playWhenReady = true
                 LogUtil.errorLog(TAG, "TYPE_SOURCE: " + error.sourceException.message)
                 playerCallback?.onPlayerNetworkError()
             }
-            ExoPlaybackException.TYPE_RENDERER -> LogUtil.errorLog(
-                TAG, "TYPE_RENDERER: " +
-                        error.rendererException.message
-            )
-            ExoPlaybackException.TYPE_UNEXPECTED -> LogUtil.errorLog(
+            ExoPlaybackException.TYPE_UNEXPECTED -> {LogUtil.errorLog(
                 TAG, "TYPE_UNEXPECTED: " +
                         error.unexpectedException.message
-            )
+            )}
             ExoPlaybackException.TYPE_OUT_OF_MEMORY -> {
                 LogUtil.errorLog(
                     TAG, "TYPE_OUT_OF_MEMORY: " +
@@ -245,12 +243,6 @@ class PlayerImpl(
             ExoPlaybackException.TYPE_REMOTE -> {
                 LogUtil.errorLog(
                     TAG, "TYPE_REMOTE: " +
-                            error.unexpectedException.message
-                )
-            }
-            ExoPlaybackException.TYPE_TIMEOUT -> {
-                LogUtil.errorLog(
-                    TAG, "TYPE_TIMEOUT: " +
                             error.unexpectedException.message
                 )
             }

@@ -167,7 +167,7 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
         try {
             val response = RetrofitClient.instance.getToken(
                 "kimne78kx3ncx6brgo4mv6wki5h1ko",
-                "tebtv3"
+                "ninja"
             )
             val streams = JSONObject(response.string())
             Coroutines.main {
@@ -187,7 +187,7 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
     private fun getTwitchStreams(response: JSONObject?) {
         if (response != null) {
             val url =
-                "http://usher.twitch.tv/api/channel/hls/tebtv3.m3u8?player=twitchweb&token=${
+                "http://usher.twitch.tv/api/channel/hls/ninja.m3u8?player=twitchweb&token=${
                     response.getString("token")
                 }&sig=${
                     response.getString("sig")
@@ -200,7 +200,6 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
                 uri = Uri.parse(url),
                 playerView = player_view,
                 playerCallback = this,
-                progressBar = pg
             )
             playerInstance!!.play()
 
@@ -218,10 +217,13 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
     }
 
     override fun onBufferingEnded() {
+        exo_progress.visibility = View.GONE
+        pg.visibility = View.INVISIBLE
         Log.d(TAG, "onBufferingEnded")
     }
 
     override fun onBufferingStarted() {
+        pg.visibility = View.VISIBLE
         Log.d(TAG, "onBufferingStarted")
     }
 

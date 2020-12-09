@@ -2,7 +2,6 @@ package com.naseeb.exoplayer
 
 import android.content.Context
 import android.net.Uri
-import android.widget.ProgressBar
 import com.google.android.exoplayer2.ui.PlayerView
 
 //TODO need to move getInstance() method to some other class. Here only player related method will be there
@@ -23,8 +22,7 @@ interface IPlayer {
             uri: Uri,
             playerView: PlayerView,
             playerCallback: PlayerCallback?,
-            progressBar: ProgressBar
-        ): IPlayer = PlayerImpl(context, uri, playerView, playerCallback, progressBar)
+        ): IPlayer = PlayerImpl(context, uri, playerView, playerCallback)
     }
 
     fun play()
