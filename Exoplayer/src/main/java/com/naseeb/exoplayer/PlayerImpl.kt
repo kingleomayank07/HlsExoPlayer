@@ -3,6 +3,7 @@ package com.naseeb.exoplayer
 import android.content.Context
 import android.net.Uri
 import android.os.Handler
+import android.os.Looper
 import android.util.Log
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.analytics.AnalyticsListener
@@ -18,7 +19,6 @@ import com.google.android.exoplayer2.trackselection.TrackSelector
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import com.google.android.exoplayer2.upstream.cache.SimpleCache
 import com.google.android.exoplayer2.util.Util
 import com.naseeb.log.LogUtil
@@ -28,19 +28,21 @@ class PlayerImpl(
     private val uri: Uri,
     private val playerView: PlayerView,
     private val playerCallback: IPlayer.PlayerCallback?
-) : IPlayer,
-    Player.EventListener, AnalyticsListener, MediaSourceEventListener {
+) : IPlayer, Player.EventListener, AnalyticsListener,
+    MediaSourceEventListener {
 
+    //region variables
     private val TAG = PlayerImpl::class.java.canonicalName
     private var mPlayer: SimpleExoPlayer? = null
     private var mToken: Int? = null
     private var mMediaSource: MediaSource? = null
     private var mSimpleCache: SimpleCache? = null
     private var mIsStartedPlayingFirstTime: Boolean = true
+    //endregion
 
     override fun pause() {
         LogUtil.debugLog(TAG, "pause")
-        stopPlayer(false)
+        mPlayer?.playWhenReady = !mPlayer?.isPlaying!!
     }
 
     private fun stopPlayer(isReset: Boolean) {
@@ -101,7 +103,7 @@ class PlayerImpl(
         }
         //Playing content in exo player
         mMediaSource = buildMediaSource(uri)
-        mMediaSource!!.addEventListener(Handler(), this)
+        mMediaSource!!.addEventListener(Handler(Looper.myLooper()!!), this)
         mPlayer!!.setMediaSource(mMediaSource!!)
         mPlayer!!.prepare()
         mPlayer!!.playWhenReady = true
@@ -130,11 +132,7 @@ class PlayerImpl(
                 /*HlsMediaSource.Factory(buildDataSourceFactory()).createMediaSource(uri)*/
                 HlsMediaSource.Factory(buildDataSourceFactory())
                     .setAllowChunklessPreparation(true)
-                    .createMediaSource(
-                        MediaItem.Builder()
-                            .setUri(uri)
-                            .build()
-                    )
+                    .createMediaSource(MediaItem.Builder().setUri(uri).build())
             }
             C.TYPE_OTHER -> {
                 LogUtil.debugLog(TAG, "buildMediaSource TYPE_OTHER")
@@ -172,17 +170,14 @@ class PlayerImpl(
                     ("app_name")
             )
         )*/
-        return DefaultDataSourceFactory(
-            context, DefaultHttpDataSourceFactory("app_name")
-        )
+        return DefaultDataSourceFactory(context)
     }
 
     @Override
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
         LogUtil.debugLog(
             TAG, "PlayerEventListener onPlayerStateChanged playWhenReady : " +
-                    playWhenReady + " playbackState : " + playbackState + " "
-        )
+                    playWhenReady + " playbackState : " + playbackState + " ")
         when (playbackState) {
             Player.STATE_READY -> {
                 playerCallback?.onBufferingEnded()
@@ -220,40 +215,33 @@ class PlayerImpl(
 
 
     override fun onPlayerError(error: ExoPlaybackException) {
-        // super.onPlayerError(error)
         LogUtil.errorLog(TAG, "Entering onPlayerError() error: ${error.message}")
 
         when (error.type) {
             ExoPlaybackException.TYPE_SOURCE -> {
+                LogUtil.errorLog(TAG, "TYPE_SOURCE: " + error.sourceException.message)
                 mPlayer?.prepare()
                 mPlayer?.playWhenReady = true
-                LogUtil.errorLog(TAG, "TYPE_SOURCE: " + error.sourceException.message)
                 playerCallback?.onPlayerNetworkError()
             }
-            ExoPlaybackException.TYPE_UNEXPECTED -> {LogUtil.errorLog(
-                TAG, "TYPE_UNEXPECTED: " +
-                        error.unexpectedException.message
-            )}
+            ExoPlaybackException.TYPE_UNEXPECTED -> {
+                LogUtil.errorLog(TAG, "TYPE_UNEXPECTED: " + error.unexpectedException.message)
+            }
             ExoPlaybackException.TYPE_OUT_OF_MEMORY -> {
-                LogUtil.errorLog(
-                    TAG, "TYPE_OUT_OF_MEMORY: " +
-                            error.unexpectedException.message
-                )
+                LogUtil.errorLog(TAG, "TYPE_OUT_OF_MEMORY: " + error.unexpectedException.message)
             }
             ExoPlaybackException.TYPE_REMOTE -> {
-                LogUtil.errorLog(
-                    TAG, "TYPE_REMOTE: " +
-                            error.unexpectedException.message
-                )
+                LogUtil.errorLog(TAG, "TYPE_REMOTE: " + error.unexpectedException.message)
             }
         }
-
         LogUtil.errorLog(TAG, "Exiting onPlayerError() error: ${error.message}")
     }
 
     fun stop() {
+        LogUtil.debugLog(TAG, "stop")
         mPlayer!!.playWhenReady = false
         mPlayer!!.stop()
         mPlayer!!.release()
     }
+
 }

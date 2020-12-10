@@ -14,11 +14,15 @@ class ExoPlayerInstanceManagerImpl private constructor(c: Context) : ExoPlayerIn
     private val tokenExoPlayerMap: MutableMap<Int, SimpleExoPlayer?> = HashMap()
     private val userInstances = ArrayList<Int>()
     private var single: SimpleExoPlayer? = null
+    private val MIN_BUFFER = 2000
+    private val MAX_BUFFER = 3000
+    private val BUFFER_PLAYBACK = 1000
+    private val BUFFER_PLAYBACK_RE_BUFFER = 1000
 
     @Synchronized
     override fun destroy() {
         LogUtil.debugLog(TAG, "destroy")
-        if (!tokenExoPlayerMap.isEmpty()) {
+        if (tokenExoPlayerMap.isNotEmpty()) {
             for (e in tokenExoPlayerMap.values) {
                 e!!.release()
             }
@@ -77,7 +81,18 @@ class ExoPlayerInstanceManagerImpl private constructor(c: Context) : ExoPlayerIn
         // 2. Create the player
 //        return ExoPlayerFactory.newSimpleInstance(c!!, trackSelector)
         val trackSelector: TrackSelector = DefaultTrackSelector(c!!)
+
+        val loadControl = DefaultLoadControl.Builder()
+            .setBufferDurationsMs(
+                MIN_BUFFER, MAX_BUFFER,
+                BUFFER_PLAYBACK, BUFFER_PLAYBACK_RE_BUFFER
+            )
+//            .setPrioritizeTimeOverSizeThresholds(true)
+//            .setTargetBufferBytes(2000)
+            .build()
+
         return SimpleExoPlayer.Builder(c!!)
+            .setLoadControl(loadControl)
             .experimentalSetThrowWhenStuckBuffering(true)
             .setTrackSelector(trackSelector)
             .setBandwidthMeter(

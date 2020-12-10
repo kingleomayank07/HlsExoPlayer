@@ -10,7 +10,7 @@
         android:layout_width="match_parent"
         android:layout_height="wrap_content"
         android:layout_gravity="center_horizontal"
-        android:columnCount="5"
+        android:columnCount="6"
         android:orientation="horizontal"
         android:paddingTop="4dp"
         android:paddingBottom="4dp"
@@ -18,10 +18,10 @@
 
 
         <ImageButton
-            android:id="@id/exo_pause"
+            android:id="@+id/exo_rewind"
             style="@style/ExoMediaButton.Rewind"
-            android:layout_columnWeight="1"
             android:layout_marginEnd="15dp"
+            android:layout_columnWeight="1"
             android:tint="@color/white"
             android:tintMode="src_in" />
 
@@ -34,10 +34,20 @@
             android:tintMode="src_in" />
 
         <ImageButton
-            android:id="@id/exo_pause"
-            style="@style/ExoMediaButton.FastForward"
+            android:id="@id/exo_play"
+            style="@style/ExoMediaButton.Play"
             android:layout_columnWeight="1"
             android:layout_marginEnd="15dp"
+            android:visibility="gone"
+            android:tint="@color/white"
+            android:tintMode="src_in" />
+
+
+        <ImageButton
+            android:id="@+id/exo_forward"
+            style="@style/ExoMediaButton.FastForward"
+            android:layout_marginEnd="15dp"
+            android:layout_columnWeight="1"
             android:tint="@color/white"
             android:tintMode="src_in" />
 
@@ -65,7 +75,8 @@
         android:layout_height="wrap_content"
         android:layout_marginTop="4dp"
         android:gravity="center_vertical"
-        android:orientation="horizontal">
+        android:orientation="horizontal"
+        android:visibility="gone">
 
         <TextView
             android:id="@id/exo_position"
@@ -83,6 +94,7 @@
             android:layout_width="0dp"
             android:layout_height="26dp"
             android:layout_weight="1"
+            android:visibility="gone"
             app:played_color="@color/purple_500"
             app:unplayed_color="@color/exo_white" />
 

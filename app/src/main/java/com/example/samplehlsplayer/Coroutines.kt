@@ -7,16 +7,16 @@ import kotlinx.coroutines.launch
 
 object Coroutines {
 
-    val job = Job()
+    val mJob = Job()
 
     fun io(work: suspend (() -> Unit)) =
-        CoroutineScope(Dispatchers.IO + job).launch {
+        CoroutineScope(Dispatchers.IO + mJob).launch {
             work()
         }
 
 
     fun main(work: suspend (() -> Unit)) =
-        CoroutineScope(Dispatchers.Main + job).launch {
+        CoroutineScope(Dispatchers.Main + mJob).launch {
             work()
         }
 
