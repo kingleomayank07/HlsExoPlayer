@@ -7,6 +7,7 @@ import android.os.Looper
 import android.util.Log
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.analytics.AnalyticsListener
+import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.MediaSourceEventListener
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
@@ -18,10 +19,14 @@ import com.google.android.exoplayer2.source.smoothstreaming.SsMediaSource
 import com.google.android.exoplayer2.trackselection.TrackSelector
 import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.DataSource
+import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
+import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import com.google.android.exoplayer2.upstream.cache.SimpleCache
 import com.google.android.exoplayer2.util.Util
 import com.naseeb.log.LogUtil
+import okhttp3.OkHttpClient
+
 
 class PlayerImpl(
     private val context: Context,
@@ -130,9 +135,28 @@ class PlayerImpl(
             C.TYPE_HLS -> {
                 LogUtil.debugLog(TAG, "buildMediaSource TYPE_HLS")
                 /*HlsMediaSource.Factory(buildDataSourceFactory()).createMediaSource(uri)*/
-                HlsMediaSource.Factory(buildDataSourceFactory())
+                val dataSourceFactory = DefaultHttpDataSourceFactory(
+                    Util.getUserAgent(
+                        context,
+                        "app_name"
+                    )
+                )
+
+                val okHttpDataSourceFactory = OkHttpDataSourceFactory(
+                    OkHttpClient().newBuilder()
+                        //adding Interceptor
+                        .addInterceptor(PlayerInterceptor())
+                        .build(),
+                    "app_name",
+                    DefaultBandwidthMeter.Builder(context).build()
+                )
+
+                HlsMediaSource.Factory(okHttpDataSourceFactory)
                     .setAllowChunklessPreparation(true)
-                    .createMediaSource(MediaItem.Builder().setUri(uri).build())
+                    .createMediaSource(
+                        MediaItem.Builder().setTag("#EXT-X-TARGETDURATION:2").setUri(uri).build()
+                    )
+
             }
             C.TYPE_OTHER -> {
                 LogUtil.debugLog(TAG, "buildMediaSource TYPE_OTHER")
@@ -177,7 +201,8 @@ class PlayerImpl(
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
         LogUtil.debugLog(
             TAG, "PlayerEventListener onPlayerStateChanged playWhenReady : " +
-                    playWhenReady + " playbackState : " + playbackState + " ")
+                    playWhenReady + " playbackState : " + playbackState + " "
+        )
         when (playbackState) {
             Player.STATE_READY -> {
                 playerCallback?.onBufferingEnded()

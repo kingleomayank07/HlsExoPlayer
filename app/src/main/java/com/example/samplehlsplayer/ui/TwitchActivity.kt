@@ -33,17 +33,12 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
     private var count = 0
     private val TAG = TwitchActivity::class.simpleName
     private var playerInstance: PlayerImpl? = null
+    private var mChannelName: String? = null
     //endregion
 
     override fun onCreate(savedInstanceState: Bundle?) {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_twitch_activty)
-
-        //region getTwitch Token
-        Coroutines.io {
-            getTwitchToken()
-        }
-        //endregion
 
         exo_pause.setOnClickListener {
             playerInstance?.pause()
@@ -67,15 +62,31 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
             setFullScreen()
         }
 
-    }
+        search.setOnClickListener {
+            mChannelName = channelName.text.toString()
+            if (mChannelName.isNullOrEmpty()) {
+                Toast.makeText(this, "Enter channel name", Toast.LENGTH_SHORT).show()
+                return@setOnClickListener
+            } else {
+                playerInstance?.stop()
+                Coroutines.io {
+                    getTwitchToken(mChannelName)
+                }
+            }
+        }
 
+    }
 
     private fun setFullScreen() {
         requestedOrientation = when (requestedOrientation) {
             ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE -> {
+                search.visibility = View.VISIBLE
+                channelName.visibility = View.VISIBLE
                 ActivityInfo.SCREEN_ORIENTATION_PORTRAIT
             }
             else -> {
+                search.visibility = View.GONE
+                channelName.visibility = View.GONE
                 ActivityInfo.SCREEN_ORIENTATION_LANDSCAPE
             }
         }
@@ -241,34 +252,40 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
         }
     }
 
-    private suspend fun getTwitchToken() {
+    private suspend fun getTwitchToken(mChannelName: String?) {
         try {
             val response = RetrofitClient.instance.getToken(
                 "kimne78kx3ncx6brgo4mv6wki5h1ko",
-                "ninja"
+                mChannelName!!
             )
             val streams = JSONObject(response.string())
             Coroutines.main {
-                getTwitchStreams(streams)
+                getTwitchStreams(streams, mChannelName)
             }
         } catch (e: IOException) {
             count++
             if (count <= 5) {
-                getTwitchToken()
+                getTwitchToken(this.mChannelName)
             } else {
+                Coroutines.main {
+                    Toast.makeText(this, "Stream offline.", Toast.LENGTH_SHORT).show()
+                }
                 Coroutines.mJob.cancel()
-                Toast.makeText(this, "Stream offline.", Toast.LENGTH_SHORT).show()
             }
         }
     }
 
-    private fun getTwitchStreams(response: JSONObject?) {
+    private fun getTwitchStreams(response: JSONObject?, mChannelName: String) {
         if (response != null) {
-            val url = "http://usher.twitch.tv/api/channel/hls/ninja.m3u8?player=twitchweb&token=${
-                response.getString("token")
-            }&sig=${
-                response.getString("sig")
-            }&allow_audio_only=true&allow_source=true&type=any&p=39114"
+            val random = (10000..99999).random()
+            val url =
+                "http://usher.twitch.tv/api/channel/hls/${mChannelName}.m3u8?player=twitchweb&token=${
+                    response.getString("token")
+                }&sig=${
+                    response.getString("sig")
+                }&allow_audio_only=false&allow_source=true&type=any&p=$random"
+
+
 
             Log.d("TAG", "getTwitchStreams: $url")
 
@@ -278,8 +295,8 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
                 playerView = player_view,
                 playerCallback = this,
             )
-            playerInstance!!.play()
 
+            playerInstance!!.play()
             trackSelector = playerInstance!!.getTrackSelector()!!
             exo_settings.isClickable = true
 

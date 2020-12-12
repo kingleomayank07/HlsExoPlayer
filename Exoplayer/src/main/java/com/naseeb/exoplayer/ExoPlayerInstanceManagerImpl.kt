@@ -10,12 +10,13 @@ import com.naseeb.log.LogUtil
 import java.util.*
 
 class ExoPlayerInstanceManagerImpl private constructor(c: Context) : ExoPlayerInstanceManager {
+
     private var c: Context?
     private val tokenExoPlayerMap: MutableMap<Int, SimpleExoPlayer?> = HashMap()
     private val userInstances = ArrayList<Int>()
     private var single: SimpleExoPlayer? = null
     private val MIN_BUFFER = 2000
-    private val MAX_BUFFER = 3000
+    private val MAX_BUFFER = 6000
     private val BUFFER_PLAYBACK = 1000
     private val BUFFER_PLAYBACK_RE_BUFFER = 1000
 
@@ -87,8 +88,7 @@ class ExoPlayerInstanceManagerImpl private constructor(c: Context) : ExoPlayerIn
                 MIN_BUFFER, MAX_BUFFER,
                 BUFFER_PLAYBACK, BUFFER_PLAYBACK_RE_BUFFER
             )
-//            .setPrioritizeTimeOverSizeThresholds(true)
-//            .setTargetBufferBytes(2000)
+            .setPrioritizeTimeOverSizeThresholds(true)
             .build()
 
         return SimpleExoPlayer.Builder(c!!)
