@@ -265,7 +265,7 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
         } catch (e: IOException) {
             count++
             if (count <= 5) {
-                getTwitchToken(this.mChannelName)
+                getTwitchToken(mChannelName)
             } else {
                 Coroutines.main {
                     Toast.makeText(this, "Stream offline.", Toast.LENGTH_SHORT).show()

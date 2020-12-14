@@ -21,7 +21,6 @@ import com.google.android.exoplayer2.ui.PlayerView
 import com.google.android.exoplayer2.upstream.DataSource
 import com.google.android.exoplayer2.upstream.DefaultBandwidthMeter
 import com.google.android.exoplayer2.upstream.DefaultDataSourceFactory
-import com.google.android.exoplayer2.upstream.DefaultHttpDataSourceFactory
 import com.google.android.exoplayer2.upstream.cache.SimpleCache
 import com.google.android.exoplayer2.util.Util
 import com.naseeb.log.LogUtil
@@ -134,14 +133,8 @@ class PlayerImpl(
             }
             C.TYPE_HLS -> {
                 LogUtil.debugLog(TAG, "buildMediaSource TYPE_HLS")
-                /*HlsMediaSource.Factory(buildDataSourceFactory()).createMediaSource(uri)*/
-                val dataSourceFactory = DefaultHttpDataSourceFactory(
-                    Util.getUserAgent(
-                        context,
-                        "app_name"
-                    )
-                )
 
+                //creating okHttpDataSourceFactory with network interceptor
                 val okHttpDataSourceFactory = OkHttpDataSourceFactory(
                     OkHttpClient().newBuilder()
                         //adding Interceptor
@@ -151,12 +144,10 @@ class PlayerImpl(
                     DefaultBandwidthMeter.Builder(context).build()
                 )
 
+                //creating HlsMediaSource with okHttpDataSourceFactory
                 HlsMediaSource.Factory(okHttpDataSourceFactory)
                     .setAllowChunklessPreparation(true)
-                    .createMediaSource(
-                        MediaItem.Builder().setTag("#EXT-X-TARGETDURATION:2").setUri(uri).build()
-                    )
-
+                    .createMediaSource(MediaItem.Builder().setUri(uri).build())
             }
             C.TYPE_OTHER -> {
                 LogUtil.debugLog(TAG, "buildMediaSource TYPE_OTHER")

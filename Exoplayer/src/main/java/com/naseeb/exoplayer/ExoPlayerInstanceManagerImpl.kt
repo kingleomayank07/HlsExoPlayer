@@ -17,8 +17,8 @@ class ExoPlayerInstanceManagerImpl private constructor(c: Context) : ExoPlayerIn
     private var single: SimpleExoPlayer? = null
     private val MIN_BUFFER = 2000
     private val MAX_BUFFER = 6000
-    private val BUFFER_PLAYBACK = 1000
-    private val BUFFER_PLAYBACK_RE_BUFFER = 1000
+    private val BUFFER_PLAYBACK = 2000
+    private val BUFFER_PLAYBACK_RE_BUFFER = 2000
 
     @Synchronized
     override fun destroy() {
