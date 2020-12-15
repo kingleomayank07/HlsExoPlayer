@@ -1,4 +1,7 @@
 <resources>
     <string name="app_name">SampleHlsPlayer</string>
     <string name="track_selection_title">Select tracks</string>
+    <string name="enter_channel_name">Enter Channel Name</string>
+    <string name="live">LIVE</string>
+    <string name="search">search</string>
 </resources>
