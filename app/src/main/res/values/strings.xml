@@ -4,4 +4,10 @@
     <string name="enter_channel_name">Enter Channel Name</string>
     <string name="live">LIVE</string>
     <string name="search">search</string>
+    <string name="rewind">rewind</string>
+    <string name="pause">pause</string>
+    <string name="play">play</string>
+    <string name="forward">forward</string>
+    <string name="settings">settings</string>
+    <string name="fullscreen">fullscreen</string>
 </resources>

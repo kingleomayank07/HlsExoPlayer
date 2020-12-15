@@ -23,7 +23,8 @@
             android:layout_marginEnd="15dp"
             android:layout_columnWeight="1"
             android:tint="@color/white"
-            android:tintMode="src_in" />
+            android:tintMode="src_in"
+            android:contentDescription="@string/rewind" />
 
         <ImageButton
             android:id="@id/exo_pause"
@@ -31,7 +32,8 @@
             android:layout_columnWeight="1"
             android:layout_marginEnd="15dp"
             android:tint="@color/white"
-            android:tintMode="src_in" />
+            android:tintMode="src_in"
+            android:contentDescription="@string/pause" />
 
         <ImageButton
             android:id="@id/exo_play"
@@ -40,7 +42,8 @@
             android:layout_marginEnd="15dp"
             android:visibility="gone"
             android:tint="@color/white"
-            android:tintMode="src_in" />
+            android:tintMode="src_in"
+            android:contentDescription="@string/play" />
 
 
         <ImageButton
@@ -49,7 +52,8 @@
             android:layout_marginEnd="15dp"
             android:layout_columnWeight="1"
             android:tint="@color/white"
-            android:tintMode="src_in" />
+            android:tintMode="src_in"
+            android:contentDescription="@string/forward" />
 
         <ImageButton
             android:id="@+id/exo_settings"
@@ -57,7 +61,8 @@
             android:layout_gravity="center_vertical"
             android:clickable="false"
             android:tint="@color/white"
-            android:tintMode="src_in" />
+            android:tintMode="src_in"
+            android:contentDescription="@string/settings" />
 
         <ImageButton
             android:id="@+id/exo_fullscreen"
@@ -65,7 +70,8 @@
             android:layout_gravity="center_vertical"
             android:clickable="false"
             android:tint="@color/white"
-            android:tintMode="src_in" />
+            android:tintMode="src_in"
+            android:contentDescription="@string/fullscreen" />
 
 
     </GridLayout>
