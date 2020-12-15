@@ -10,3 +10,4 @@ class M3UItem {
 
     var itemIcon: String? = null
 }
+

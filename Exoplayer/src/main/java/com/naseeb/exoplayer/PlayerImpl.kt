@@ -5,9 +5,12 @@ import android.net.Uri
 import android.os.Handler
 import android.os.Looper
 import android.util.Log
+import androidx.lifecycle.LiveData
+import androidx.lifecycle.MutableLiveData
 import com.google.android.exoplayer2.*
 import com.google.android.exoplayer2.analytics.AnalyticsListener
 import com.google.android.exoplayer2.ext.okhttp.OkHttpDataSourceFactory
+import com.google.android.exoplayer2.metadata.Metadata
 import com.google.android.exoplayer2.source.MediaSource
 import com.google.android.exoplayer2.source.MediaSourceEventListener
 import com.google.android.exoplayer2.source.ProgressiveMediaSource
@@ -25,6 +28,10 @@ import com.google.android.exoplayer2.upstream.cache.SimpleCache
 import com.google.android.exoplayer2.util.Util
 import com.naseeb.log.LogUtil
 import okhttp3.OkHttpClient
+import java.text.DateFormat
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.time.ExperimentalTime
 
 
 class PlayerImpl(
@@ -41,12 +48,19 @@ class PlayerImpl(
     private var mToken: Int? = null
     private var mMediaSource: MediaSource? = null
     private var mSimpleCache: SimpleCache? = null
+    private var mTimeLine = MutableLiveData<String>()
     private var mIsStartedPlayingFirstTime: Boolean = true
     //endregion
 
     override fun pause() {
         LogUtil.debugLog(TAG, "pause")
-        mPlayer?.playWhenReady = !mPlayer?.isPlaying!!
+        if (mPlayer?.isPlaying!!) {
+            mPlayer!!.playWhenReady = false
+            mPlayer!!.pause()
+        } else {
+            mPlayer!!.play()
+            mPlayer!!.playWhenReady = true
+        }
     }
 
     private fun stopPlayer(isReset: Boolean) {
@@ -88,6 +102,10 @@ class PlayerImpl(
 
     fun getTrackSelector(): TrackSelector? {
         return mPlayer?.trackSelector
+    }
+
+    fun getTime(): LiveData<String?> {
+        return mTimeLine
     }
 
     override fun play() {
@@ -144,6 +162,7 @@ class PlayerImpl(
                     DefaultBandwidthMeter.Builder(context).build()
                 )
 
+
                 //creating HlsMediaSource with okHttpDataSourceFactory
                 HlsMediaSource.Factory(okHttpDataSourceFactory)
                     .setAllowChunklessPreparation(true)
@@ -190,6 +209,7 @@ class PlayerImpl(
 
     @Override
     override fun onPlayerStateChanged(playWhenReady: Boolean, playbackState: Int) {
+
         LogUtil.debugLog(
             TAG, "PlayerEventListener onPlayerStateChanged playWhenReady : " +
                     playWhenReady + " playbackState : " + playbackState + " "
@@ -236,8 +256,6 @@ class PlayerImpl(
         when (error.type) {
             ExoPlaybackException.TYPE_SOURCE -> {
                 LogUtil.errorLog(TAG, "TYPE_SOURCE: " + error.sourceException.message)
-                mPlayer?.prepare()
-                mPlayer?.playWhenReady = true
                 playerCallback?.onPlayerNetworkError()
             }
             ExoPlaybackException.TYPE_UNEXPECTED -> {
@@ -253,11 +271,27 @@ class PlayerImpl(
         LogUtil.errorLog(TAG, "Exiting onPlayerError() error: ${error.message}")
     }
 
-    fun stop() {
-        LogUtil.debugLog(TAG, "stop")
-        mPlayer!!.playWhenReady = false
-        mPlayer!!.stop()
-        mPlayer!!.release()
+    @ExperimentalTime
+    override fun onMetadata(eventTime: AnalyticsListener.EventTime, metadata: Metadata) {
+        for (i in 0 until metadata.length()) {
+            if (metadata[i].toString().contains("2020-")) {
+                val sdf: DateFormat = SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss")
+                val formattedDate: Date = sdf.parse(metadata[i].toString().split("value=")[1])
+                val cal = Calendar.getInstance()
+                cal.time = sdf.parse(metadata[i].toString().split("value=")[1])
+                cal.add(Calendar.HOUR, -1)
+                val oneHourBack = cal.time
+                sdf.timeZone = TimeZone.getTimeZone("IST")
+                mTimeLine.postValue(sdf.format(oneHourBack))
+                Log.d(TAG, "onMetadata: ${sdf.format(formattedDate)}")
+            }
+        }
     }
 
+
+    fun stop() {
+        LogUtil.debugLog(TAG, "stop")
+        mPlayer?.stop()
+        mPlayer?.release()
+    }
 }

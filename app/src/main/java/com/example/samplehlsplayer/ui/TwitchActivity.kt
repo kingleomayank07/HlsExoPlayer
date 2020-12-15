@@ -1,5 +1,6 @@
 package com.example.samplehlsplayer.ui
 
+import android.annotation.SuppressLint
 import android.content.pm.ActivityInfo
 import android.net.Uri
 import android.os.Build
@@ -24,8 +25,13 @@ import kotlinx.android.synthetic.main.activity_twitch_activty.*
 import kotlinx.android.synthetic.main.ui_exoplayer.*
 import org.json.JSONObject
 import java.io.IOException
+import java.text.DateFormat
+import java.text.SimpleDateFormat
+import java.util.*
+import kotlin.time.ExperimentalTime
 
 
+@ExperimentalTime
 class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
 
     //region variables
@@ -44,6 +50,12 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
             playerInstance?.pause()
             exo_pause.visibility = View.GONE
             exo_play.visibility = View.VISIBLE
+        }
+
+        exo_play.setOnClickListener {
+            playerInstance?.pause()
+            exo_pause.visibility = View.VISIBLE
+            exo_play.visibility = View.GONE
         }
 
         exo_forward.setOnClickListener {
@@ -275,11 +287,14 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
         }
     }
 
+    @SuppressLint("SetTextI18n")
     private fun getTwitchStreams(response: JSONObject?, mChannelName: String) {
         if (response != null) {
             val random = (10000..99999).random()
             val url =
-                "http://usher.twitch.tv/api/channel/hls/${mChannelName}.m3u8?player=twitchweb&token=${
+                "http://usher.twitch.tv/api/channel/hls/${
+                    mChannelName
+                }.m3u8?player=twitchweb&token=${
                     response.getString("token")
                 }&sig=${
                     response.getString("sig")
@@ -293,8 +308,22 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
                 context = applicationContext,
                 uri = Uri.parse(url),
                 playerView = player_view,
-                playerCallback = this,
+                playerCallback = this
             )
+
+            playerInstance?.getTime()?.observe(this, {
+                val c = Calendar.getInstance().time
+                val sdf: DateFormat = SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss")
+                val formattedDate = sdf.format(c)
+
+                val mills: Long = c.time - sdf.parse(it).time
+                val secs = (mills / (1000) % 60).toInt()
+
+                sdf.timeZone = TimeZone.getTimeZone("IST")
+                time.text = "Player current time : $it \n" +
+                        "System current time $formattedDate \n" +
+                        "Difference between is : ${secs}s"
+            })
 
             playerInstance!!.play()
             trackSelector = playerInstance!!.getTrackSelector()!!
@@ -323,6 +352,13 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
 
     override fun onPlayEnded() {
         Log.d(TAG, "onPlayEnded")
+    }
+
+    override fun onPlayerNetworkError() {
+        playerInstance?.stop()
+        Coroutines.io {
+            getTwitchToken(mChannelName)
+        }
     }
 
     override fun onMediaDurationFetched(videoDuration: Long) {

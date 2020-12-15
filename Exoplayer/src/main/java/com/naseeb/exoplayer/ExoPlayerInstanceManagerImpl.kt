@@ -15,10 +15,10 @@ class ExoPlayerInstanceManagerImpl private constructor(c: Context) : ExoPlayerIn
     private val tokenExoPlayerMap: MutableMap<Int, SimpleExoPlayer?> = HashMap()
     private val userInstances = ArrayList<Int>()
     private var single: SimpleExoPlayer? = null
-    private val MIN_BUFFER = 2000
+    private val MIN_BUFFER = 3000
     private val MAX_BUFFER = 6000
-    private val BUFFER_PLAYBACK = 2000
-    private val BUFFER_PLAYBACK_RE_BUFFER = 2000
+    private val BUFFER_PLAYBACK = 3000
+    private val BUFFER_PLAYBACK_RE_BUFFER = 3000
 
     @Synchronized
     override fun destroy() {
