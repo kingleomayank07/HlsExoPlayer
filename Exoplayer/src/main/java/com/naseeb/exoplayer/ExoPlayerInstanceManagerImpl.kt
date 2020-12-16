@@ -40,8 +40,8 @@ class ExoPlayerInstanceManagerImpl private constructor(c: Context) : ExoPlayerIn
     @get:Synchronized
     override val freeInstanceOfExoPlayer: ExoPlayerInstanceManager.SimpleExoPlayerWrapper
         get() {
-            var e: SimpleExoPlayer? = null
-            var token: Int? = null
+            val e: SimpleExoPlayer?
+            val token: Int?
             if (userInstances.isEmpty()) {
                 // not in use
                 LogUtil.debugLog(TAG, "getFreeInstanceOfExoPlayer userInstances.isEmpty()")

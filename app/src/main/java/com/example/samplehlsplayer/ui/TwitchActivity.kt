@@ -28,11 +28,10 @@ import java.io.IOException
 import java.text.DateFormat
 import java.text.SimpleDateFormat
 import java.util.*
-import kotlin.time.ExperimentalTime
 
 
-@ExperimentalTime
-class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
+@SuppressLint("SimpleDateFormat", "SetTextI18n")
+class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback, View.OnClickListener {
 
     //region variables
     private lateinit var trackSelector: TrackSelector
@@ -46,46 +45,18 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
         super.onCreate(savedInstanceState)
         setContentView(R.layout.activity_twitch_activty)
 
-        exo_pause.setOnClickListener {
-            playerInstance?.pause()
-            exo_pause.visibility = View.GONE
-            exo_play.visibility = View.VISIBLE
-        }
-
-        exo_play.setOnClickListener {
-            playerInstance?.pause()
-            exo_pause.visibility = View.VISIBLE
-            exo_play.visibility = View.GONE
-        }
-
-        exo_forward.setOnClickListener {
-            playerInstance?.pause()
-            exo_pause.visibility = View.VISIBLE
-            exo_play.visibility = View.GONE
-        }
-
         exo_settings.setOnClickListener {
             val popupMenu = PopupMenu(this, it)
-            popupMenu.menu.add("auto")
+            popupMenu.menu.add(R.string.auto)
             customTrackSelection(trackSelector as DefaultTrackSelector, popupMenu)
         }
+        exo_pause.setOnClickListener(this)
+        exo_play.setOnClickListener(this)
+        exo_forward.setOnClickListener(this)
+        exo_fullscreen.setOnClickListener(this)
+        search.setOnClickListener(this)
+        live_text.setOnClickListener(this)
 
-        exo_fullscreen.setOnClickListener {
-            setFullScreen()
-        }
-
-        search.setOnClickListener {
-            mChannelName = channelName.text.toString()
-            if (mChannelName.isNullOrEmpty()) {
-                Toast.makeText(this, "Enter channel name", Toast.LENGTH_SHORT).show()
-                return@setOnClickListener
-            } else {
-                playerInstance?.stop()
-                Coroutines.io {
-                    getTwitchToken(mChannelName)
-                }
-            }
-        }
 
     }
 
@@ -219,7 +190,7 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
         getTrackNames(trackSelector, popupMenu)
         popupMenu.setOnMenuItemClickListener {
             val maxWidth = it.title
-            if (maxWidth != "auto") {
+            if (maxWidth != getString(R.string.auto)) {
                 val getTitle = maxWidth.split(",").toTypedArray()
                 val getHeightWidth = getTitle[0].split("×").toTypedArray()
                 val params = trackSelector.buildUponParameters()
@@ -267,7 +238,7 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
     private suspend fun getTwitchToken(mChannelName: String?) {
         try {
             val response = RetrofitClient.instance.getToken(
-                "kimne78kx3ncx6brgo4mv6wki5h1ko",
+                getString(R.string.client_id),
                 mChannelName!!
             )
             val streams = JSONObject(response.string())
@@ -287,7 +258,6 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
         }
     }
 
-    @SuppressLint("SetTextI18n")
     private fun getTwitchStreams(response: JSONObject?, mChannelName: String) {
         if (response != null) {
             val random = (10000..99999).random()
@@ -316,12 +286,14 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
                 val sdf: DateFormat = SimpleDateFormat("yyyy-MM-dd'T'hh:mm:ss")
                 val formattedDate = sdf.format(c)
 
-                val mills: Long = c.time - sdf.parse(it).time
+                val mills: Long = c.time - sdf.parse(it!!)?.time!!
                 val secs = (mills / (1000) % 60).toInt()
+
+                checkLive(secs)
 
                 sdf.timeZone = TimeZone.getTimeZone("IST")
                 time.text = "Player current time : $it \n" +
-                        "System current time $formattedDate \n" +
+                        "System current time: $formattedDate \n" +
                         "Difference between is : ${secs}s"
             })
 
@@ -329,6 +301,40 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
             trackSelector = playerInstance!!.getTrackSelector()!!
             exo_settings.isClickable = true
 
+        }
+    }
+
+    private fun checkLive(secs: Int) {
+        if (secs >= 15) {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                live_background.setCardBackgroundColor(
+                    resources.getColor(
+                        R.color.exo_gray,
+                        theme
+                    )
+                )
+                live_text.text = getString(R.string.go_live).toUpperCase(Locale.ROOT)
+            } else {
+                live_background.setCardBackgroundColor(
+                    resources.getColor(
+                        R.color.exo_gray
+                    )
+                )
+                live_text.text = getString(R.string.go_live).toUpperCase(Locale.ROOT)
+            }
+        } else {
+            if (Build.VERSION.SDK_INT >= Build.VERSION_CODES.M) {
+                live_background.setCardBackgroundColor(
+                    resources.getColor(
+                        R.color.transparent_red,
+                        theme
+                    )
+                )
+                live_text.text = getString(R.string.live).toUpperCase(Locale.ROOT)
+            } else {
+                live_background.setCardBackgroundColor(resources.getColor(R.color.transparent_red))
+                live_text.text = getString(R.string.live).toUpperCase(Locale.ROOT)
+            }
         }
     }
 
@@ -363,6 +369,53 @@ class TwitchActivity : AppCompatActivity(), IPlayer.PlayerCallback {
 
     override fun onMediaDurationFetched(videoDuration: Long) {
         Log.d(TAG, "onMediaDurationFetched: $videoDuration")
+    }
+
+    override fun onClick(v: View?) {
+        when (v?.id) {
+            R.id.exo_pause -> {
+                playerInstance?.pause()
+                exo_pause.visibility = View.GONE
+                exo_play.visibility = View.VISIBLE
+            }
+
+            R.id.exo_play -> {
+                playerInstance?.pause()
+                exo_pause.visibility = View.VISIBLE
+                exo_play.visibility = View.GONE
+            }
+
+            R.id.exo_forward -> {
+                playerInstance?.pause()
+                exo_pause.visibility = View.VISIBLE
+                exo_play.visibility = View.GONE
+            }
+
+            R.id.exo_fullscreen -> {
+                setFullScreen()
+            }
+
+            R.id.search -> {
+                mChannelName = channelName.text.toString()
+                if (mChannelName.isNullOrEmpty()) {
+                    Toast.makeText(this, "Enter channel name", Toast.LENGTH_SHORT).show()
+                } else {
+                    pg.visibility = View.VISIBLE
+                    playerInstance?.stop()
+                    Coroutines.io {
+                        getTwitchToken(mChannelName)
+                    }
+                }
+            }
+
+            R.id.live_text -> {
+                playerInstance?.goLive()
+            }
+
+            else -> {
+                Toast.makeText(this, "Unexpected item clicked!", Toast.LENGTH_SHORT).show()
+            }
+        }
     }
 
     /* private fun getPlayList(response: ResponseBody) {

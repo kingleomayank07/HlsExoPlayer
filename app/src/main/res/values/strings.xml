@@ -10,4 +10,7 @@
     <string name="forward">forward</string>
     <string name="settings">settings</string>
     <string name="fullscreen">fullscreen</string>
+    <string name="go_live">Go Live</string>
+    <string name="client_id">kimne78kx3ncx6brgo4mv6wki5h1ko</string>
+    <string name="auto">auto</string>
 </resources>

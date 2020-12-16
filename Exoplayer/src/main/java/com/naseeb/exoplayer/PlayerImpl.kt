@@ -1,5 +1,6 @@
 package com.naseeb.exoplayer
 
+import android.annotation.SuppressLint
 import android.content.Context
 import android.net.Uri
 import android.os.Handler
@@ -271,7 +272,7 @@ class PlayerImpl(
         LogUtil.errorLog(TAG, "Exiting onPlayerError() error: ${error.message}")
     }
 
-    @ExperimentalTime
+    @SuppressLint("SimpleDateFormat")
     override fun onMetadata(eventTime: AnalyticsListener.EventTime, metadata: Metadata) {
         for (i in 0 until metadata.length()) {
             if (metadata[i].toString().contains("2020-")) {
@@ -293,5 +294,9 @@ class PlayerImpl(
         LogUtil.debugLog(TAG, "stop")
         mPlayer?.stop()
         mPlayer?.release()
+    }
+
+    fun goLive() {
+        mPlayer?.seekTo(C.TIME_UNSET)
     }
 }
